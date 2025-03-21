@@ -1,50 +1,104 @@
-const User = require('../models/User');
-const jwt = require('jsonwebtoken');
+const User = require("../models/User");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 
-// Register a new user
-exports.register = async (req, res) => {
-  const { email, password } = req.body;
+// Generate JWT Token
+const generateToken = (userId) => {
+  return jwt.sign({ userId }, process.env.JWT_SECRET, {
+    expiresIn: "7d", // Token expires in 7 days
+  });
+};
 
+// 🔐 Login User
+exports.login = async (req, res) => {
   try {
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
-    }
+    const { email, password } = req.body;
 
-    const user = new User({ email, password });
-    await user.save();
+    // Check if user exists
+    const user = await User.findOne({ email });
+    if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: '1h',
+    // Check password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
+
+    // Generate token
+    const token = generateToken(user._id);
+
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        avatar: user.avatar || null,
+      },
     });
-
-    res.status(201).json({ token, user: { email: user.email } });
-  } catch (err) {
-    res.status(500).json({ message: 'Something went wrong' });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-// Login user
-exports.login = async (req, res) => {
-  const { email, password } = req.body;
-
+// 📝 Register User
+exports.register = async (req, res) => {
   try {
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+    const { email, password, repassword, avatar } = req.body;
+
+    // Validate input
+    if (!email || !password || !repassword) {
+      return res.status(400).json({ message: "All fields are required" });
     }
 
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+    if (password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: '1h',
+    if (password !== repassword) {
+      return res.status(400).json({ message: "Passwords do not match" });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) return res.status(400).json({ message: "Email already registered" });
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user
+    const newUser = new User({ email, password: hashedPassword, avatar });
+    await newUser.save();
+
+    // Generate token
+    const token = generateToken(newUser._id);
+
+    res.status(201).json({
+      token,
+      user: {
+        id: newUser._id,
+        email: newUser.email,
+        avatar: newUser.avatar || null,
+      },
     });
+  } catch (error) {
+    console.error("Registration error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
-    res.status(200).json({ token, user: { email: user.email } });
-  } catch (err) {
-    res.status(500).json({ message: 'Something went wrong' });
+// 🔄 Get Authenticated User
+exports.getAuthenticatedUser = async (req, res) => {
+  try {
+    const token = req.header("Authorization")?.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ message: "No token provided" });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId).select("-password");
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json({ user });
+  } catch (error) {
+    console.error("Auth error:", error);
+    res.status(401).json({ message: "Invalid token" });
   }
 };

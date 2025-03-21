@@ -1,12 +1,9 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes');
 const fileRoutes = require('./routes/fileRoutes');
-
-// Load environment variables
-dotenv.config();
 
 // Validate required environment variables
 const requiredEnvVars = ['MONGO_URI', 'JWT_SECRET', 'PORT'];
@@ -19,34 +16,38 @@ for (const envVar of requiredEnvVars) {
 
 const app = express();
 
-// Middleware
+// ✅ CORS Configuration (Allow frontend requests)
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000', // Allow requests from frontend
+    origin: process.env.FRONTEND_URL || '*', // Allow requests from frontend
     credentials: true, // Allow cookies and credentials
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
   })
 );
+
+// ✅ Middleware
 app.use(express.json()); // Parse JSON request bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request bodies
 
-// Log environment variables for debugging
-console.log('Environment variables:', {
+// ✅ Log environment variables (Security masked)
+console.log('✅ Environment variables loaded:', {
   MONGO_URI: process.env.MONGO_URI ? '***' : 'Not set',
   JWT_SECRET: process.env.JWT_SECRET ? '***' : 'Not set',
   PORT: process.env.PORT,
   FRONTEND_URL: process.env.FRONTEND_URL,
 });
 
-// Routes
+// ✅ Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/files', fileRoutes);
 
-// Health check endpoint
+// ✅ Health Check Endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'Server is running' });
 });
 
-// Connect to MongoDB
+// ✅ Connect to MongoDB
 mongoose
   .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
@@ -54,27 +55,27 @@ mongoose
   })
   .then(() => console.log('✅ Connected to MongoDB'))
   .catch((err) => {
-    console.error('❌ Failed to connect to MongoDB:', err);
-    process.exit(1); // Exit if MongoDB connection fails
+    console.error('❌ MongoDB Connection Error:', err);
+    process.exit(1);
   });
 
-// Start the server
+// ✅ Start the server
 const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-  console.error('❌ Unhandled Rejection:', err);
-  server.close(() => process.exit(1)); // Gracefully shut down the server
-});
-
-// Handle SIGTERM (for Docker or Kubernetes)
+// ✅ Graceful Shutdown Handling
 process.on('SIGTERM', () => {
-  console.log('🛑 SIGTERM received. Shutting down gracefully...');
+  console.log('🛑 SIGTERM received. Shutting down...');
   server.close(() => {
     console.log('✅ Server closed.');
     process.exit(0);
   });
+});
+
+// ✅ Handle Unhandled Promise Rejections
+process.on('unhandledRejection', (err) => {
+  console.error('❌ Unhandled Rejection:', err);
+  server.close(() => process.exit(1));
 });
