@@ -6,7 +6,7 @@ const { body, validationResult } = require("express-validator");
 
 // ✅ Generate Tokens
 const generateAccessToken = (userId) =>
-  jwt.sign({ userId }, "yes" ,{ expiresIn: "1h" });
+  jwt.sign({ userId }, process.env.JWT_SECRET ,{ expiresIn: "1h" }); // Use JWT_SECRET from env
 
 const generateRefreshToken = (userId) =>
   jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET, { expiresIn: "7d" });
@@ -42,7 +42,7 @@ exports.login = async (req, res) => {
 console.log("Password Match:", isPasswordValid);
   console.log("Entered password:", password);
   console.log("Stored password:", user ? user.password : "Not found");
-  // if (!isPasswordValid) return res.status(401).json({ error: "Invalid credentials" });
+  if (!isPasswordValid) return res.status(401).json({ error: "Invalid credentials" }); // Re-enabled password check
   
   const accessToken = generateAccessToken(user._id);
   // const refreshToken = generateRefreshToken(user.email);
@@ -64,8 +64,8 @@ exports.register = async (req, res) => {
   const { name, email, password } = req.body;
   if (await User.findOne({ email })) return res.status(400).json({ error: "Email already in use" });
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const newUser = new User({ name, email, password: hashedPassword });
+  // Let the User model's pre-save hook handle hashing
+  const newUser = new User({ name, email, password }); // Pass the plain password
   await newUser.save();
 
   res.status(201).json({ message: "Registration successful! Please log in." });

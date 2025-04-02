@@ -1,0 +1,324 @@
+{
+	"info": {
+		"_postman_id": "09c85943-6cb4-41aa-a65d-90325919d12a",
+		"name": "BackendFile API",
+		"description": "Collection for testing the BackendFile API endpoints.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "31277708"
+	},
+	"item": [
+		{
+			"name": "System",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"health"
+							]
+						},
+						"description": "Checks if the server is running."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\":\"{{userName}}\",\n    \"email\": \"{{userEmail}}\",\n    \"password\": \"{{userPassword}}\",\n    \"repassword\": \"{{userPassword}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Creates a new user account."
+					},
+					"response": []
+				},
+				{
+					"name": "Login User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{userEmail}}\",\n    \"password\": \"{{userPassword}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Logs in a user and retrieves an authentication token. Capture the token (e.g., in `token`) and set the `authToken` variable."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Authenticated User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/user",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"user"
+							]
+						},
+						"description": "Retrieves details for the currently logged-in user. Requires a valid JWT token set in the `authToken` variable."
+					},
+					"response": []
+				},
+				{
+					"name": "Upload File (Auth Route)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "{{filePath}}"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/upload",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"upload"
+							]
+						},
+						"description": "Uploads a file using the endpoint defined in `authRoutes.js`. Requires the `filePath` variable to be set to the path of the file to upload."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "File Management",
+			"item": [
+				{
+					"name": "Upload File (Files Route)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "{{filePath}}"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/files/upload",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"files",
+								"upload"
+							]
+						},
+						"description": "Uploads a file for the authenticated user and saves metadata. Requires a valid JWT token (`authToken`) and the `filePath` variable."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Recent Transfers",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/files/recent",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"files",
+								"recent"
+							]
+						},
+						"description": "Retrieves a list of files uploaded by the authenticated user. Requires a valid JWT token (`authToken`)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Uploaded Files Access",
+			"item": [
+				{
+					"name": "Get Uploaded File",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/uploads/{{uploadedFilename}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"uploads",
+								"{{uploadedFilename}}"
+							]
+						},
+						"description": "Retrieves a previously uploaded file. Requires the `uploadedFilename` variable to be set to the name of the file returned by an upload request."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "userEmail",
+			"value": "test@example.com",
+			"type": "string"
+		},
+		{
+			"key": "userPassword",
+			"value": "password123",
+			"type": "string"
+		},
+		{
+			"key": "filePath",
+			"value": "/path/to/your/testfile.txt",
+			"type": "string"
+		},
+		{
+			"key": "uploadedFilename",
+			"value": "example.txt",
+			"type": "string"
+		},
+		{
+			"key": "userName",
+			"value": "",
+			"type": "default"
+		}
+	]
+}
