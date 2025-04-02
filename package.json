@@ -2,7 +2,7 @@
   "name": "filetransfer",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
@@ -24,6 +24,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.15.0",
     "mongoose": "^8.12.1",
+    "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1"
   }
 }

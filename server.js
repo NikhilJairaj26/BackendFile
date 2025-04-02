@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const morgan = require('morgan');
 const authRoutes = require('./routes/authRoutes');
 const fileRoutes = require('./routes/fileRoutes');
 
@@ -15,7 +16,8 @@ for (const envVar of requiredEnvVars) {
 }
 
 const app = express();
-
+app.use("/uploads", express.static("uploads"));
+app.use(morgan("dev"))
 // ✅ CORS Configuration (Allow frontend requests)
 app.use(
   cors({
